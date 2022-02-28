@@ -3,6 +3,7 @@ import sys
 import time
 import math
 import torch
+import torch.nn as nn
 import numpy as np
 from torchvideotransforms import video_transforms, volume_transforms
 
@@ -14,6 +15,8 @@ def fix_bn(m):
     if classname.find('BatchNorm') != -1:
         m.eval()
 ###################################################################################
+
+
 
 
 ###################################################################################
@@ -98,6 +101,11 @@ def format_time(seconds):
 
 ###################################################################################
 
+
+
+
+
+
 ###################################################################################
 # build dataloaders
 def get_video_trans():
@@ -119,15 +127,8 @@ def get_video_trans():
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
-def build_dataloaders(Dataset, args, config=None):
-    train_trans, test_trans = get_video_trans()
-    train_dataset = Dataset(class_idx_list=[args.action_id], score_range=args.score_range, subset='train',
-                                          # data_root='/home/share/AQA_7/',
-                                          data_root=args.dataset_root,
-                                          transform=train_trans, frame_length=args.frame_length, args=args)
-    test_dataset = Dataset(class_idx_list=[args.action_id], score_range=args.score_range, subset='test',
-                                         data_root=args.dataset_root,
-                                         transform=test_trans, frame_length=args.frame_length, args=args)
+def build_dataloaders(dataset_creator, args):
+    train_dataset, test_dataset = dataset_creator(args)
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size_train,
                                                    shuffle=True, num_workers=int(args.workers),
@@ -140,6 +141,10 @@ def build_dataloaders(Dataset, args, config=None):
     dataloaders['test'] = test_dataloader
     return dataloaders
 ###################################################################################
+
+
+
+
 
 ###################################################################################
 # misc
@@ -170,3 +175,15 @@ def normalize(label, class_idx, upper = 100.0):
     return norm_label
 ###################################################################################
 
+
+
+
+
+###################################################################################
+# kaiming initialization
+def kaiming_normal_init(m):
+	if isinstance(m, nn.Conv2d):
+		nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+	elif isinstance(m, nn.Linear):
+		nn.init.kaiming_normal_(m.weight, nonlinearity='sigmoid')
+###################################################################################

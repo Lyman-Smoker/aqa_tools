@@ -5,3 +5,5 @@ mask = False
 div_loss = False
 
 attn = True
+
+num_exemplars = 10

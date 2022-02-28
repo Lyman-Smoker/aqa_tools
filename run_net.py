@@ -13,7 +13,7 @@ parser=argparse.ArgumentParser(description='liym AQA collection')
 
 # experiment settings
 parser.add_argument('--experiment',default='',type=str,required=True,choices=['single', 'multi', 'IL'],help='experiment name')
-parser.add_argument('--approach',default='',type=str,required=True,choices=['i3d-mlp','usdl','core-mlp','core-attn'],help='approach name')
+parser.add_argument('--approach',default='',type=str,required=True,choices=['i3d-mlp','usdl','core-mlp','core-attn','i3d-mlp-icarl'],help='approach name')
 parser.add_argument('--exp_name',type=str,default='debug',help='experiment name')                                                                            
 # ckpt and log
 parser.add_argument("--pretrained_i3d_weight", type=str, default='../pretrained_models/i3d_model_rgb.pth', help='path to the checkpoint model')
@@ -46,7 +46,7 @@ args=parser.parse_args()
 if args.dataset == 'aqa7':
     from dataloaders.Seven import Seven as Dataset
 elif args.dataset == 'aqa7-pair':
-    from dataloaders.Seven_Pairs import Seven_Pairs as Dataset
+    from dataloaders.Seven_Pairs import create_dataset as dataset_creator
 elif args.dataset == 'aqa7_multi':
     from dataloaders.Seven_Multi import Seven_Multi as Dataset
 elif args.dataset == 'mtl_pair':
@@ -63,6 +63,8 @@ elif args.approach == 'core-mlp':
     from approaches.CoRe_MLP import Core_MLP as Approach
 elif args.approach == 'core-attn':
     from approaches.CoRe_Attn import CoRe_Attn as Approach
+elif args.approach == 'i3d-mlp-icarl':
+    from approaches.I3D_MLP_iCaRL import I3D_MLP_iCaRL as Apporach
 
 
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -78,7 +80,7 @@ for arg in vars(args):
     print('\t'+arg+':',getattr(args,arg))
 print('='*100)
 
-dataloaders = build_dataloaders(Dataset, args)
+dataloaders = build_dataloaders(dataset_creator, args)
 
 approach = Approach(dataloaders=dataloaders, args=args)
 approach.to_cuda()
